@@ -1,5 +1,5 @@
 # Aurabrace
-
+I am the designer of Aurabrace.
 Aurabrace is a low-power wireless LED wristband system designed for synchronized lighting effects, inspired by large-scale audience interaction devices. The system uses an RF receiver, a Padauk microcontroller, and onboard memory to deliver dynamic LED patterns efficiently.
 
 ---
