@@ -1,0 +1,512 @@
+#define POLYR 0x8F3   // reversed CRC12 polynomial (from 0xCF1)
+#define INITR 0xC69   // reversed CRC12 init value (from 0x963)
+
+
+
+WORD Success = 0;
+word bitcounttest=0;
+BYTE bit_sample = 0;
+BYTE last_sample = 0;
+BYTE counter = 0; 
+WORD shift_reg = 0; 
+BYTE bit_count = 0;
+
+
+// Payload is 9 bytes
+    
+BYTE byte_index = 0;
+
+WORD testdebug = 0;
+
+#define Bit_Ticks 40  
+#define offset 20    
+
+BIT Pin6_Out : PA.6;
+BIT Pin6_Dir : PAC.6;
+
+BIT preamble_lock;
+BIT offsetLock;
+BIT bitready;
+BYTE CRCcheckbit;
+
+byte rx_buf[9] ;
+//The maximum number of tables that can be checked is 255, and the maximum value of data to be searched is 255
+.align 256
+BYTE Look_Table(BYTE val)
+{
+    // 1. Safety Gate: If val is outside your table range (0 to 182), return error immediately
+    if (val > 182) return 0x00; 
+
+    A = val;
+	A += 1;
+    // Removed A += 1; unless your hardware specifically requires it. 
+    // Usually A = val; is correct for a 0-indexed jump.
+
+    _Pcadd
+    {
+
+		// 0–32
+		ret 0x00; // 0
+		ret 0x00; // 1
+		ret 0x00; // 2
+		ret 0x00; // 3
+		ret 0x00; // 4
+		ret 0x00; // 5
+		ret 0x00; // 6
+		ret 0x00; // 7
+		ret 0x00; // 8
+		ret 0x00; // 9
+		ret 0x00; // 10
+		ret 0x00; // 11
+		ret 0x00; // 12
+		ret 0x00; // 13
+		ret 0x00; // 14
+		ret 0x00; // 15
+		ret 0x00; // 16
+		ret 0x00; // 17
+		ret 0x00; // 18
+		ret 0x00; // 19
+		ret 0x00; // 20
+		ret 0x00; // 21
+		ret 0x00; // 22
+		ret 0x00; // 23
+		ret 0x00; // 24
+		ret 0x00; // 25
+		ret 0x00; // 26
+		ret 0x00; // 27
+		ret 0x00; // 28
+		ret 0x00; // 29
+		ret 0x00; // 30
+		ret 0x00; // 31
+		ret 0x00; // 32
+
+		// 33+
+		ret 0;    // 33
+		ret 30;   // 34
+		ret 0x00; // 35
+		ret 7;    // 36
+		ret 56;   // 37
+		ret 5;    // 38
+		ret 0x00; // 39
+		ret 0x00; // 40
+		ret 59;   // 41
+		ret 26;   // 42
+		ret 0x00; // 43
+		ret 2;    // 44
+		ret 57;   // 45
+		ret 0x00; // 46
+		ret 0x00; // 47
+		ret 0x00; // 48
+		ret 32;   // 49
+		ret 31;   // 50
+		ret 0x00; // 51
+		ret 3;    // 52
+		ret 1;    // 53
+		ret 29;   // 54
+		ret 0x00; // 55
+		ret 0x00; // 56
+		ret 0x00; // 57
+		ret 0x00; // 58
+		ret 0x00; // 59
+		ret 0x00; // 60
+		ret 0x00; // 61
+		ret 0x00; // 62
+		ret 0x00; // 63
+		ret 0x00; // 64
+		ret 0x00; // 65
+		ret 24;   // 66
+		ret 0x00; // 67
+		ret 10;   // 68
+		ret 61;   // 69
+		ret 8;    // 70
+		ret 0x00; // 71
+		ret 0x00; // 72
+		ret 52;   // 73
+		ret 51;   // 74
+		ret 0x00; // 75
+		ret 14;   // 76
+		ret 60;   // 77
+		ret 0x00; // 78
+		ret 0x00; // 79
+		ret 0x00; // 80
+		ret 55;   // 81
+		ret 54;   // 82
+		ret 0x00; // 83
+		ret 11;   // 84
+		ret 38;   // 85
+		ret 9;    // 86
+		ret 0x00; // 87
+		ret 0x00; // 88
+		ret 53;   // 89
+		ret 50;   // 90
+		ret 36;   // 91
+		ret 16;   // 92
+		ret 0x00; // 93
+		ret 21;   // 94
+		ret 34;   // 95
+		ret 23;   // 96
+		ret 62;   // 97
+		ret 25;   // 98
+		ret 37;   // 99
+		ret 12;   // 100
+		ret 63;   // 101
+		ret 4; // 102
+		ret 0x00; // 103
+		ret 0x00; // 104
+		ret 58;   // 105
+		ret 27;   // 106
+		ret 0x00; // 107
+		ret 15;   // 108
+		ret 13;   // 109
+		ret 0x00; // 110
+		ret 0x00; // 111
+		ret 0x00; // 112
+		ret 0x00; // 113
+		ret 0x00; // 114
+		ret 0x00; // 115
+		ret 0x00; // 116
+		ret 0x00; // 117
+		ret 0x00; // 118
+		ret 0x00; // 119
+		ret 0x00; // 120
+		ret 0x00; // 121
+		ret 0x00; // 122
+		ret 0x00; // 123
+		ret 0x00; // 124
+		ret 0x00; // 125
+		ret 0x00; // 126
+		ret 0x00; // 127
+		ret 0x00; // 128
+		ret 0x00; // 129
+		ret 0x00; // 130
+		ret 0x00; // 131
+		ret 43;   // 132
+		ret 38;   // 133
+		ret 22;   // 134
+		ret 0x00; // 135
+		ret 0x00; // 136
+		ret 39;   // 137
+		ret 49;   // 138
+		ret 0x00; // 139
+		ret 42;   // 140
+		ret 46;   // 141
+		ret 0x00; // 142
+		ret 0x00; // 143
+		ret 0x00; // 144
+		ret 36;   // 145
+		ret 16;   // 146
+		ret 0x00; // 147
+		ret 21;   // 148
+		ret 34;   // 149
+		ret 23;   // 150
+		ret 0x00; // 151
+		ret 0x00; // 152
+		ret 37;   // 153
+		ret 48;   // 154
+		ret 0x00; // 155
+		ret 0x00; // 156
+		ret 0x00; // 157
+		ret 0x00; // 158
+		ret 0x00; // 159
+		ret 0x00; // 160
+		ret 44;   // 161
+		ret 19;   // 162
+		ret 0x00; // 163
+		ret 41;   // 164
+		ret 40;   // 165
+		ret 18;   // 166
+		ret 0x00; // 167
+		ret 0x00; // 168
+		ret 45;   // 169
+		ret 0x00; // 170
+		ret 0x00; // 171
+		ret 6;    // 172
+		ret 47;   // 173
+		ret 0x00; // 174
+		ret 0x00; // 175
+		ret 0x00; // 176
+		ret 33;   // 177
+		ret 17;   // 178
+		ret 0x00; // 179
+		ret 20;   // 180
+		ret 35;   // 181
+		ret 28;   // 182
+	}
+}
+void	PWMG0_PWM(void)
+{
+PWMG0DTL  = 0x00;
+PWMG0DTH  = 0;
+PWMG0CUBL = 0x00;
+PWMG0CUBH = 252;
+
+$ PWMG0C Enable, Inverse, PA0, SYSCLK;
+$ PWMG0S INTR_AT_DUTY, /1, /1;
+
+}
+
+// Same principle as PWMG0 except for the foot position
+void	PWMG1_PWM(void)
+{
+PWMG1DTL  = 0x00;
+PWMG1DTH  = 0;
+PWMG1CUBL = 0x00;
+PWMG1CUBH = 252;
+
+$ PWMG1C Enable, Inverse, PA4, SYSCLK;
+$ PWMG1S INTR_AT_DUTY, /1, /1;
+}
+//Except the foot position is different, the other principles are the same as PWMG0
+void	PWMG2_PWM(void)
+{
+PWMG2DTL  = 0x00;
+PWMG2DTH  = 0;
+PWMG2CUBL = 0x00;
+PWMG2CUBH = 252;
+
+$ PWMG2C Enable, Inverse, PA5, SYSCLK;
+$ PWMG2S INTR_AT_DUTY, /1, /1;
+}
+
+BYTE CRC_Check(void) 
+{
+    WORD reg;
+    BYTE i, b;
+    BYTE calc_low, calc_high;
+    BYTE rx_decoded_low, rx_decoded_high;
+
+    reg = INITR; // 0xC69
+    i = 1;
+
+    // 1. Calculate CRC using RAW dictionary bytes (1 through 7)
+    while (i <= 7)
+    {
+        reg ^= rx_buf[i]; // Using the raw 0x21, etc.
+        b = 0;
+        while (b < 8)
+        {
+            if (reg & 0x0001) {
+                reg >>= 1;
+                reg ^= POLYR; 
+            } else {
+                reg >>= 1;
+            }
+            b++;
+        }
+        i++;
+    }
+
+    reg &= 0x0FFF; // Keep 12-bit result
+
+    // 2. Prepare values for comparison
+    calc_low = (reg & 0x3F);
+    calc_high = (reg >> 6);
+    calc_high &= 0x3F;
+
+    // 3. Decode the CRC bytes ONLY (0 and 8)
+    rx_decoded_low = Look_Table(rx_buf[0]);
+
+    rx_decoded_high = Look_Table(rx_buf[8]);
+	
+    // 4. Comparison
+    if (calc_low == rx_decoded_low) 
+    {
+        if (calc_high == rx_decoded_high) 
+        {
+            return 1; // Success
+        }
+    }
+    return 0; 
+}
+
+//========TM2 Interrupt Settings========
+void TM2_Init_8Bit(void)
+{
+    tm2b = 200;      // Bound value
+    tm2ct = 0;     // Clear counter to be safe
+    
+    // IHRC: 16MHz clock source
+    // Period: Crucial for tm2b to work
+    $ TM2C IHRC, Disable, Period; 
+    
+    // /1, /1: No further dividers
+    $ TM2S 8bit, /1, /1; 
+
+    INTEN.TM2 = 1;
+    INTRQ.TM2 = 0;
+}
+
+
+
+void FPPA0(void)
+{
+     .ADJUST_IC SYSCLK=IHRC/4, IHRC=16MHz, VDD=5V;
+
+    PAC.3 = 0;    // PA3 Input
+    PADIER = 0x00; // Analog Mode
+  
+	   //0b76543210;
+  gpcc = 0b10110000; 
+  //bit 7 enabled for comparator to turn on,  
+  //bit 5 for timer2 to take sample, 
+  //bit 4 for inverse polarity of the comparator 
+  $ GPCS VDD*12/24; 
+    // Run calibration at startup
+   // Update_Battery_Threshold();
+
+    NOP;
+    TM2_Init_8Bit();
+
+
+
+    Pin6_Dir = 1;
+    Pin6_Out = 0;
+    PWMG0_PWM();
+	PWMG1_PWM();
+	PWMG2_PWM();
+    offsetLock = 0;
+    preamble_lock = 0;
+	bitready=0;
+	CRCcheckbit=0;
+
+
+
+
+
+
+
+    ENGINT;
+
+while (1) 
+{
+	
+
+    if (bitready) 
+    {
+        // STEP 1: Run CRC on the raw data (it decodes 0 and 8 internally)
+		CRCcheckbit=CRC_Check();
+        if (CRCcheckbit) 
+        {
+           // Success++;
+             rx_buf[1] = Look_Table(rx_buf[1]);
+            rx_buf[2] = Look_Table(rx_buf[2]);
+			PWMG1DTH =rx_buf[2]<<2;
+            rx_buf[3] = Look_Table(rx_buf[3]);
+			PWMG2DTH =rx_buf[3]<<2;
+            rx_buf[4] = Look_Table(rx_buf[4]);
+			PWMG0DTH =rx_buf[4]<<2;
+            rx_buf[5] = Look_Table(rx_buf[5]);
+            rx_buf[6] = Look_Table(rx_buf[6]);
+            rx_buf[7] = Look_Table(rx_buf[7]);
+  
+NOP;
+            // Now you can use the data...
+        } 
+        else 
+        {
+            //testdebug++;
+        }
+
+        // STEP 3: Reset for the next interrupt
+        byte_index = 0; 
+        bitready = 0; 
+    }
+}
+}
+
+void Interrupt(void)
+{
+     PUSHAF;
+
+if (INTRQ.COMP) { 
+    INTRQ.COMP = 0; 
+    // This is the "Industrial Secret": 
+    // We don't use the COMP interrupt to run code, 
+    // we just use the hardware flag to "Yank" our timer to 0.
+    tm2ct = 0; 
+    counter = 0; 
+}
+
+    if (INTRQ.TM2)
+    {
+        INTRQ.TM2 = 0; 
+
+        // PA6 will now show the RF pulses using the battery-calibrated threshold
+        if (GPCC.6) {  
+            bit_sample = 1;
+           // Pin6_Out = 1; 
+        }
+        else {
+            bit_sample = 0;
+           // Pin6_Out = 0;
+        }
+
+        if (last_sample != bit_sample) {
+            counter = 0;
+            offsetLock = 0;
+        } else {
+            // Sampling logic at center of bit
+            if ((counter == offset && !offsetLock) || (offsetLock && counter == Bit_Ticks)) {
+                counter = 0;
+                offsetLock = 1;
+                
+                // --- NEW RIGHT-SHIFT ENTRY ---
+                // New bit enters at bit 15 (MSB) and everything moves right
+                shift_reg = (shift_reg >> 1) | (bit_sample << 15);
+                
+               // bitcounttest++;
+			//	if(bitcounttest>60000){
+			//	bitcounttest=0;
+			//	Success=0;
+			//	testdebug=0;
+			//	}
+                bit_count++;
+                
+       
+
+                // --- SEARCH & COLLECT LOGIC ---
+                if (!preamble_lock) {
+                    // Preamble 0xAAA9 reversed for Right-Shift is 0x9555
+                    if (shift_reg == 0x9555) {
+                        preamble_lock = 1;
+                        bit_count = 0;   
+                        byte_index = 0;  
+                    }
+                } 
+                else {
+                    // Capture a byte every 8 bits
+                    if (!(bit_count & 0x07)) { 
+                        if (byte_index < 9) {
+                            // Extract the newest bits from the upper byte of shift_reg
+                            rx_buf[byte_index] = (shift_reg >> 8); 
+                            byte_index++;
+                        }
+                    }
+
+                    // Done after 72 bits (9 bytes)
+     // --- Inside your ISR Collection Mode ---
+				if (byte_index == 9) {
+					NOP;
+				    if (!bitready) {
+				        bitready = 1;  // Signal Main Loop that data is safe to read
+				        preamble_lock = 0; // Stop collecting further bits for now
+				        bit_count = 0;
+				        // Do NOT reset byte_index here; let the Main Loop see it or reset it
+				    } else {
+				        // This part is Industrial Grade: 
+				        // If bitready is STILL 1, it means the Main Loop hasn't 
+				        // processed the last packet yet. We drop this new packet
+				        // to prevent data corruption.
+				        preamble_lock = 0;
+				        bit_count = 0;
+  					  }
+					}			
+
+                }
+            }
+        }
+        last_sample = bit_sample;
+        counter++;
+    }
+    POPAF;
+}
